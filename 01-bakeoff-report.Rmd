@@ -1,0 +1,46 @@
+---
+title: "The Great British Bake Off"
+output: html_document
+params:
+  series: 1
+---
+
+```{r include=FALSE}
+library(tidyverse)
+library(here)
+library(glue)
+```
+
+```{r import-data, include=FALSE}
+filepath <- glue::glue("data/ratings-{params$series}.csv")
+ratings <- read_csv(here::here(filepath)) %>% 
+  mutate(episode = as.factor(episode))
+```
+
+
+# Overview
+
+Series `r params$series` premiered on `r min(ratings$uk_airdate)`, and had `r n_distinct(ratings$episode)` episodes.
+
+# Ratings
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+viewers <- ratings %>% 
+  select(series:viewers_28day) %>% 
+  pivot_longer(starts_with("viewers"), 
+    names_to = "days", 
+    names_prefix = "viewers_", 
+    values_to = "viewers"
+  ) 
+ggplot(viewers, aes(episode, 
+                    viewers, 
+                    colour = days, 
+                    group = days)) + 
+  geom_point() + 
+  geom_line() + 
+  labs(
+    x = "Episode", 
+    y = "Viewers (millions)"
+  ) +
+  expand_limits(y = 0) 
+```
